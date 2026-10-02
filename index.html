@@ -3,60 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>คู่มือและจำลองการทำงาน LED Pattern (ข้อ 1)</title>
+  <title>Microcontroller Exam 1 Visualizer</title>
   <style>
     :root {
-      --bg: #0b0f19;
-      --card: #161f30;
-      --card-border: #24344d;
+      --bg: #090d16;
+      --card: #131b2e;
+      --border: #22304d;
       --text: #f1f5f9;
       --muted: #94a3b8;
       --accent: #38bdf8;
-      --highlight: rgba(56, 189, 248, 0.25);
+      --highlight: rgba(56, 189, 248, 0.2);
     }
     body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 24px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    .container {
-      max-width: 950px;
+    .wrapper {
+      max-width: 960px;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
-    h1, h2, h3 {
-      margin: 0 0 10px 0;
-      color: var(--accent);
-    }
+    h1, h2 { color: var(--accent); margin: 0 0 10px 0; }
     .card {
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 22px;
-      border: 1px solid var(--card-border);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
     }
-    /* Hardware Board */
+    .tab-nav {
+      display: flex;
+      gap: 10px;
+    }
+    .tab-btn {
+      padding: 10px 22px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #090d16;
+      border-color: var(--accent);
+    }
+    /* Simulation LED Board */
     .board {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      background: #0d131f;
-      padding: 30px;
-      border-radius: 12px;
+      background: #070a10;
+      padding: 25px;
+      border-radius: 10px;
       border: 2px dashed #334155;
     }
-    .led-slot {
+    .slot {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .led {
       width: 52px;
@@ -64,7 +80,7 @@
       border-radius: 50%;
       background: #1e293b;
       border: 3px solid #475569;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
     .led.red.on    { background: #ef4444; box-shadow: 0 0 25px #ef4444; border-color: #fca5a5; }
     .led.orange.on { background: #f97316; box-shadow: 0 0 25px #f97316; border-color: #fdba74; }
@@ -73,360 +89,247 @@
     
     .label { font-size: 14px; font-weight: bold; }
     .pin { font-size: 12px; color: var(--muted); }
+    .bit-tag { font-family: monospace; font-size: 13px; color: var(--accent); }
 
-    /* Controls */
     .controls {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
-      margin-top: 18px;
+      margin-top: 15px;
       flex-wrap: wrap;
     }
-    button {
+    button.btn-ctrl {
       background: var(--accent);
-      color: #0b0f19;
+      color: #090d16;
       border: none;
-      padding: 10px 18px;
+      padding: 8px 16px;
       border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
     }
-    button:hover { opacity: 0.9; }
-    .status-badge {
-      font-size: 15px;
-      font-weight: bold;
-      color: #e2e8f0;
+    .status-pill {
       margin-left: auto;
-      background: #1e293b;
-      padding: 8px 14px;
-      border-radius: 6px;
-      border: 1px solid #334155;
-    }
-
-    /* Explanation Grid */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-    @media (max-width: 768px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    /* Code View Box */
-    .code-box {
-      background: #080c14;
-      border-radius: 8px;
-      border: 1px solid var(--card-border);
-      font-family: 'Consolas', monospace;
-      font-size: 13px;
-      padding: 12px 0;
-      line-height: 1.6;
-    }
-    .code-line {
-      padding: 2px 14px;
-      display: block;
-      color: #94a3b8;
-    }
-    .code-line.active {
-      background: var(--highlight);
-      color: #38bdf8;
-      font-weight: bold;
-      border-left: 4px solid var(--accent);
-    }
-
-    /* Deep Explain Box */
-    .explain-box {
-      background: #0d1524;
-      border-radius: 8px;
-      border: 1px solid #1e2e48;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .explain-title {
-      font-size: 15px;
-      font-weight: bold;
-      color: #38bdf8;
-    }
-    .explain-desc {
       font-size: 14px;
-      color: #cbd5e1;
+      background: #090d16;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .explain {
+      background: #0a1120;
+      border-left: 4px solid var(--accent);
+      padding: 14px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 14px;
       line-height: 1.6;
     }
-
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: center;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 9px;
-      border: 1px solid var(--card-border);
+    pre {
+      background: #080c14;
+      padding: 14px;
+      border-radius: 8px;
+      overflow-x: auto;
       font-size: 13px;
-    }
-    th { background: #0c121e; }
-    tr.active-row {
-      background: var(--highlight);
-      font-weight: bold;
-      color: #38bdf8;
+      color: #7dd3fc;
+      border: 1px solid var(--border);
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
+<div class="wrapper">
   <div>
-    <h1>เครื่องมือเจาะลึกการทำงานโค้ดไฟวิ่ง (LED Pattern Inspector)</h1>
-    <p style="color: var(--muted); margin: 0;">จำลองฮาร์ดแวร์จริง พร้อมถอดรหัสฟังก์ชันการทำงานทีละบรรทัดตามโจทย์ข้อ 1</p>
+    <h1>เครื่องมือเตรียมสอบปฏิบัติ Microcontroller</h1>
+    <p style="color: var(--muted); margin: 0;">จำลองการทำงาน ถอดรหัสบิต และอธิบายคำสั่งทีละบรรทัด (ข้อ 1 & ข้อ 2)</p>
   </div>
 
-  <!-- ส่วนที่ 1: หลอดไฟจำลอง -->
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab1" onclick="switchMode(1)">ข้อ 1: ไฟวิ่งตามแพทเทิร์น (Forever)</button>
+    <button class="tab-btn" id="tab2" onclick="switchMode(2)">ข้อ 2: นับเลขฐานสอง 0-15 (One Round)</button>
+  </div>
+
   <div class="card">
-    <h2>1. จำลองหลอดไฟบนบอร์ดจริง</h2>
+    <h2 id="boardTitle">จำลองฮาร์ดแวร์: ข้อ 1</h2>
+    
     <div class="board">
-      <div class="led-slot">
+      <div class="slot">
         <div id="led0" class="led red"></div>
         <span class="label" style="color: #f87171;">D0 (แดง)</span>
         <span class="pin">Pin 13</span>
+        <span class="bit-tag" id="tag0">บิต 0</span>
       </div>
-      <div class="led-slot">
+      <div class="slot">
         <div id="led1" class="led orange"></div>
         <span class="label" style="color: #fb923c;">D1 (ส้ม)</span>
         <span class="pin">Pin 12</span>
+        <span class="bit-tag" id="tag1">บิต 1</span>
       </div>
-      <div class="led-slot">
+      <div class="slot">
         <div id="led2" class="led yellow"></div>
         <span class="label" style="color: #fde047;">D2 (เหลือง)</span>
         <span class="pin">Pin 11</span>
+        <span class="bit-tag" id="tag2">บิต 2</span>
       </div>
-      <div class="led-slot">
+      <div class="slot">
         <div id="led3" class="led green"></div>
         <span class="label" style="color: #4ade80;">D3 (เขียว)</span>
         <span class="pin">Pin 10</span>
+        <span class="bit-tag" id="tag3">บิต 3</span>
       </div>
     </div>
 
     <div class="controls">
-      <button onclick="toggleAuto()">เล่นอัตโนมัติ / หยุดชั่วคราว</button>
-      <button onclick="stepForward()">คลิกดูทีละสเต็ป (Next Step)</button>
-      <button onclick="resetSim()" style="background:#475569; color:#fff;">รีเซ็ต (Reset)</button>
-      <div class="status-badge" id="stepStatus">กำลังทำงาน: Step 0</div>
+      <button class="btn-ctrl" onclick="togglePlay()">เริ่มอัตโนมัติ / หยุด</button>
+      <button class="btn-ctrl" onclick="stepNext()">ถัดไป 1 สเต็ป (Next)</button>
+      <button class="btn-ctrl" style="background: #475569; color: #fff;" onclick="resetSim()">รีเซ็ต (Reset)</button>
+      <div class="status-pill" id="statusBadge">Step: 0</div>
+    </div>
+
+    <div class="explain" id="explainBox">
+      กำลังประมวลผล...
     </div>
   </div>
 
-  <!-- ส่วนที่ 2: โค้ดสดคู่กับคำอธิบายการทำงาน -->
   <div class="card">
-    <h2>2. ตัวติดตามการทำงานของโค้ด (Live Code & Function Inspector)</h2>
-    <div class="grid-2">
-      <!-- บล็อกโค้ด -->
-      <div class="code-box">
-        <span class="code-line" id="line-def">const int ledPins[4] = {13, 12, 11, 10};</span>
-        <span class="code-line" id="line-pat">const int pattern[9][4] = { ... };</span>
-        <span class="code-line" id="line-setup">void setup() {</span>
-        <span class="code-line" id="line-pinmode">&nbsp;&nbsp;pinMode(ledPins[i], OUTPUT);</span>
-        <span class="code-line">&nbsp;&nbsp;digitalWrite(ledPins[i], LOW);</span>
-        <span class="code-line">}</span>
-        <span class="code-line" id="line-loop">void loop() {</span>
-        <span class="code-line" id="line-forstep">&nbsp;&nbsp;for (int step = 0; step &lt; 9; step++) {</span>
-        <span class="code-line" id="line-write">&nbsp;&nbsp;&nbsp;&nbsp;digitalWrite(ledPins[pin], pattern[step][pin]);</span>
-        <span class="code-line" id="line-delay">&nbsp;&nbsp;&nbsp;&nbsp;delay(300);</span>
-        <span class="code-line">&nbsp;&nbsp;}</span>
-        <span class="code-line">}</span>
-      </div>
-
-      <!-- บล็อกคำอธิบายตามสเต็ปปัจจุบัน -->
-      <div class="explain-box">
-        <div class="explain-title" id="explainTitle">คำอธิบายจังหวะปัจจุบัน</div>
-        <div class="explain-desc" id="explainDesc">
-          กำลังเตรียมความพร้อมของระบบ...
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ส่วนที่ 3: สรุปหน้าที่ของฟังก์ชันหลักในภาษา C/Arduino -->
-  <div class="card">
-    <h2>3. สรุปความหมายของตัวแปรและฟังก์ชันสำคัญ</h2>
-    <div style="display: flex; flex-direction: column; gap: 14px;">
-      <div>
-        <strong style="color: #38bdf8;">1. <code>const int ledPins[4]</code></strong>
-        <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 14px;">
-          <strong>คืออะไร:</strong> อาร์เรย์ (Array) ขนาด 4 ช่อง ใช้เก็บตัวเลขขาของไมโครคอนโทรลเลอร์<br>
-          <strong>หมายถึงยังไง:</strong> เป็นการผูกตัวแปรเข้ากับฮาร์ดแวร์จริง เช่น ช่องที่ 0 คือขา 13 (LED แดง), ช่องที่ 3 คือขา 10 (LED เขียว) ทำให้เวลาสั่งงานไม่ต้องพิมพ์เลขขาซ้ำ ๆ แค่เรียกผ่านดัชนี <code>ledPins[i]</code>
-        </p>
-      </div>
-      <div>
-        <strong style="color: #38bdf8;">2. <code>void setup()</code></strong>
-        <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 14px;">
-          <strong>คืออะไร:</strong> ฟังก์ชันเริ่มต้นการทำงานของ Arduino<br>
-          <strong>หมายถึงยังไง:</strong> คำสั่งที่เขียนในนี้จะถูกเรียกทำงาน <strong>"เพียงรอบเดียวตอนเปิดเครื่อง"</strong> เหมาะสำหรับเตรียมความพร้อม เช่น สั่ง <code>pinMode(..., OUTPUT)</code> เพื่อสั่งให้ขาเป็นตัวปล่อยกระแสไฟออกไปหา LED
-        </p>
-      </div>
-      <div>
-        <strong style="color: #38bdf8;">3. <code>void loop()</code></strong>
-        <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 14px;">
-          <strong>คืออะไร:</strong> ฟังก์ชันลูปหลักของการประมวลผล<br>
-          <strong>หมายถึงยังไง:</strong> เมื่อทำคำสั่งบรรทัดสุดท้ายในฟังก์ชันนี้เสร็จ ไมโครคอนโทรลเลอร์จะกระโดดกลับมาบรรทัดแรกของ <code>loop()</code> เพื่อทำใหม่เรื่อย ๆ ไม่มีวันหยุด (ตรงกับเงื่อนไขคำว่า <em>Forever</em> ในโจทย์)
-        </p>
-      </div>
-      <div>
-        <strong style="color: #38bdf8;">4. <code>digitalWrite(pin, value)</code></strong>
-        <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 14px;">
-          <strong>คืออะไร:</strong> ฟังก์ชันสั่งจ่ายหรือไม่จ่ายแรงดันไฟฟ้า (5V หรือ 0V)<br>
-          <strong>หมายถึงยังไง:</strong> ถ้าค่าเป็น <code>1 (HIGH)</code> บอร์ดจะปล่อยไฟ 5V ทำให้ LED สว่างขึ้น แต่ถ้าเป็น <code>0 (LOW)</code> บอร์ดจะตัดไฟ ทำให้ LED ดับ
-        </p>
-      </div>
-      <div>
-        <strong style="color: #38bdf8;">5. <code>delay(300)</code></strong>
-        <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 14px;">
-          <strong>คืออะไร:</strong> ฟังก์ชันสั่งหยุดรอเวลา มีหน่วยเป็นมิลลิวินาที (ms)<br>
-          <strong>หมายถึงยังไง:</strong> ตัวประมวลผลจะค้างสถานะไฟปัจจุบันไว้ 300 ms (0.3 วินาที) เพื่อให้สายตามนุษย์มองเห็นการกะพริบ/การวิ่งทัน หากไม่มีคำสั่งนี้ ไฟจะวิ่งเร็วหลายล้านรอบต่อวินาทีจนเห็นเป็นไฟติดค้างทุกดวง
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ส่วนที่ 4: ตาราง Lookup Table Trace -->
-  <div class="card">
-    <h2>4. ตารางโพยสถานะ (Lookup Table Trace)</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Step</th>
-          <th>บิตคำสั่ง</th>
-          <th>D0 (Pin 13)</th>
-          <th>D1 (Pin 12)</th>
-          <th>D2 (Pin 11)</th>
-          <th>D3 (Pin 10)</th>
-          <th>พฤติกรรมของไฟ</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr id="row-0"><td>0</td><td>0000</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>จุด (A) ดับหมดทุกดวง</td></tr>
-        <tr id="row-1"><td>1</td><td>1000</td><td>1 (ติด)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>ไฟเริ่มวิ่ง: แดงติดดวงแรก</td></tr>
-        <tr id="row-2"><td>2</td><td>0100</td><td>0 (ดับ)</td><td>1 (ติด)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>ไฟวิ่งไปทางขวา: ส้มติด</td></tr>
-        <tr id="row-3"><td>3</td><td>0010</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>1 (ติด)</td><td>0 (ดับ)</td><td>ไฟวิ่งไปทางขวา: เหลืองติด</td></tr>
-        <tr id="row-4"><td>4</td><td>0001</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>1 (ติด)</td><td>ไฟวิ่งถึงขวาสุด: เขียวติด</td></tr>
-        <tr id="row-5"><td>5</td><td>0001</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>1 (ติด)</td><td>เขียวติดค้างซ้ำอีก 1 จังหวะ</td></tr>
-        <tr id="row-6"><td>6</td><td>0010</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>1 (ติด)</td><td>0 (ดับ)</td><td>ไฟวิ่งย้อนกลับซ้าย: เหลืองติด</td></tr>
-        <tr id="row-7"><td>7</td><td>0100</td><td>0 (ดับ)</td><td>1 (ติด)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>ไฟวิ่งย้อนกลับซ้าย: ส้มติด</td></tr>
-        <tr id="row-8"><td>8</td><td>1000</td><td>1 (ติด)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>0 (ดับ)</td><td>ไฟวิ่งกลับถึงซ้ายสุด: แดงติด แล้วเตรียมวนลูปใหม่</td></tr>
-      </tbody>
-    </table>
+    <h2>โค้ดและการถอดรหัสฟังก์ชัน</h2>
+    <pre id="codeDisplay"></pre>
   </div>
 </div>
 
 <script>
-  const pattern = [
+  let mode = 1;
+  let step = 0;
+  let timer = null;
+
+  const patternQ1 = [
     [0,0,0,0], [1,0,0,0], [0,1,0,0],
     [0,0,1,0], [0,0,0,1], [0,0,0,1],
     [0,0,1,0], [0,1,0,0], [1,0,0,0]
   ];
 
-  const descriptions = [
-    {
-      title: "Step 0: จุดเริ่มต้น (A) สั่งดับไฟหมด",
-      desc: "โปรแกรมอ่านตารางแถวที่ 0 ได้ค่า {0, 0, 0, 0} ฟังก์ชัน digitalWrite() ส่งค่า LOW (0V) ไปยังขาทั้งหมด ทำให้ LED ทุกดวงดับสนิท จากนั้นคำสั่ง delay(300) จะหยุดรอ 0.3 วินาที"
-    },
-    {
-      title: "Step 1: หลอดแดง (D0) สว่างขึ้น",
-      desc: "โปรแกรมเลื่อน step มาที่ 1 ได้ค่า {1, 0, 0, 0} คำสั่ง digitalWrite(ledPins[0], 1) ปล่อยไฟ 5V ออกขา 13 ทำให้หลอดแดงติดสว่าง ส่วนขา 12, 11, 10 ได้รับค่า 0 จึงดับอยู่"
-    },
-    {
-      title: "Step 2: ไฟวิ่งต่อไปยังหลอดส้ม (D1)",
-      desc: "โปรแกรมอ่านค่า {0, 1, 0, 0} คำสั่ง digitalWrite() จะตัดไฟหลอดแดง (ขา 13 กลายเป็น 0) และปล่อยไฟให้ขา 12 เป็น 1 ทำให้หลอดส้มสว่างแทน"
-    },
-    {
-      title: "Step 3: ไฟวิ่งต่อไปยังหลอดเหลือง (D2)",
-      desc: "โปรแกรมอ่านค่า {0, 0, 1, 0} หลอดส้มดับลง และหลอดเหลือง (ขา 11) ติดสว่างขึ้นมาแทนที่"
-    },
-    {
-      title: "Step 4: ไฟวิ่งถึงปลายขวาสุด หลอดเขียว (D3)",
-      desc: "โปรแกรมอ่านค่า {0, 0, 0, 1} หลอดเหลืองดับ และหลอดเขียว (ขา 10) สว่างขึ้น เป็นจุดสิ้นสุดของการวิ่งไปทางขวา"
-    },
-    {
-      title: "Step 5: หลอดเขียว (D3) ติดซ้ำอีกจังหวะ",
-      desc: "สังเกตในตารางโจทย์ ค่าแถวนี้ยังคงเป็น {0, 0, 0, 1} หลอดเขียวจึงยังสว่างต่อเนื่องอีก 300 ms ตามข้อกำหนด 0001 -> 0001"
-    },
-    {
-      title: "Step 6: ไฟเริ่มวิ่งย้อนกลับ หลอดเหลือง (D2)",
-      desc: "โปรแกรมอ่านค่า {0, 0, 1, 0} หลอดเขียวดับลง และไฟวิ่งย้อนกลับมาติดที่หลอดเหลือง (ขา 11)"
-    },
-    {
-      title: "Step 7: ไฟวิ่งย้อนกลับ หลอดส้ม (D1)",
-      desc: "โปรแกรมอ่านค่า {0, 1, 0, 0} หลอดเหลืองดับ และไฟย้อนกลับมาติดที่หลอดส้ม (ขา 12)"
-    },
-    {
-      title: "Step 8: ไฟกลับมาถึงหลอดแดง (D0) จบรอบ",
-      desc: "โปรแกรมอ่านค่า {1, 0, 0, 0} หลอดแดงติดสว่าง เป็นสเต็ปสุดท้ายของลูป for เมื่อจบตรงนี้ กลไกของ void loop() จะพาโค้ดย้อนกลับไปเริ่ม Step 0 ใหม่อัตโนมัติ"
+  const code1 = `// ข้อ 1: ไฟวิ่งวนซ้ำแบบไม่รู้จบ (Pattern Forever)
+const int ledPins[4] = {13, 12, 11, 10}; // แมปขาดิจิทัลเข้า LED D0-D3
+
+const int pattern[9][4] = {
+  {0,0,0,0}, {1,0,0,0}, {0,1,0,0},
+  {0,0,1,0}, {0,0,0,1}, {0,0,0,1},
+  {0,0,1,0}, {0,1,0,0}, {1,0,0,0}
+};
+
+void setup() {
+  for (int i = 0; i < 4; i++) {
+    pinMode(ledPins[i], OUTPUT);     // ตั้งพินให้เป็นตัวส่งไฟออก
+    digitalWrite(ledPins[i], LOW);   // ดับไฟทุกดวงเริ่มต้น
+  }
+}
+
+void loop() {
+  for (int step = 0; step < 9; step++) {
+    for (int pin = 0; pin < 4; pin++) {
+      // ดึงค่า 0 หรือ 1 จากตารางโพยยิงเข้าขาดิจิทัลตรงๆ
+      digitalWrite(ledPins[pin], pattern[step][pin]);
     }
-  ];
+    delay(300); // รอ 0.3 วินาทีเพื่อให้มองเห็นจังหวะ
+  }
+  // วนลูปกลับไปทำ step 0 ใหม่อัตโนมัติตามกฎของ void loop()
+}`;
 
-  let currentStep = 0;
-  let timer = null;
+  const code2 = `// ข้อ 2: นับเลขฐานสองขึ้น 0-15 เพียง 1 รอบ (Binary Up Counting)
+const int ledPins[4] = {13, 12, 11, 10};
 
-  function render() {
-    // 1. อัปเดตไฟ LED
-    for (let i = 0; i < 4; i++) {
-      const el = document.getElementById('led' + i);
-      if (pattern[currentStep][i] === 1) {
-        el.classList.add('on');
-      } else {
-        el.classList.remove('on');
-      }
-    }
-
-    // 2. อัปเดตไฮไลต์ในตาราง
-    for (let s = 0; s < 9; s++) {
-      const row = document.getElementById('row-' + s);
-      if (s === currentStep) {
-        row.classList.add('active-row');
-      } else {
-        row.classList.remove('active-row');
-      }
-    }
-
-    // 3. ไฮไลต์โค้ดที่กำลังทำงาน
-    document.getElementById('line-write').classList.add('active');
-    document.getElementById('line-delay').classList.add('active');
-
-    // 4. แสดงคำอธิบายอย่างละเอียด
-    document.getElementById('stepStatus').innerText = `กำลังทำงาน: Step ${currentStep}`;
-    document.getElementById('explainTitle').innerText = descriptions[currentStep].title;
-    document.getElementById('explainDesc').innerText = descriptions[currentStep].desc;
+void setup() {
+  for (int i = 0; i < 4; i++) {
+    pinMode(ledPins[i], OUTPUT);
+    digitalWrite(ledPins[i], LOW);
   }
 
-  function stepForward() {
-    currentStep = (currentStep + 1) % 9;
+  // **สำคัญ**: นำลูปนับมาไว้ใน setup() เพื่อให้ทำงานเพียงแค่รอบเดียว
+  for (int count = 0; count <= 15; count++) {
+    for (int i = 0; i < 4; i++) {
+      int bitState = (count >> i) & 1; // เลื่อนและกรองบิตที่ i
+      digitalWrite(ledPins[i], bitState);
+    }
+    delay(500); // แสดงผลเลขละ 0.5 วินาที
+  }
+
+  // ดับไฟทั้งหมดเมื่อนับจบ
+  for (int i = 0; i < 4; i++) digitalWrite(ledPins[i], LOW);
+}
+
+void loop() {
+  // ว่างไว้เพื่อหยุดนิ่ง ไม่มีการนับซ้ำอีก
+}`;
+
+  function switchMode(newMode) {
+    stop();
+    mode = newMode;
+    step = 0;
+    document.getElementById('tab1').className = mode === 1 ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tab2').className = mode === 2 ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('boardTitle').innerText = mode === 1 ? 'จำลองฮาร์ดแวร์: ข้อ 1 (Pattern Forever)' : 'จำลองฮาร์ดแวร์: ข้อ 2 (Binary 0-15)';
+    document.getElementById('codeDisplay').innerText = mode === 1 ? code1 : code2;
+    render();
+  }
+
+  function render() {
+    let bits = [0, 0, 0, 0];
+    if (mode === 1) {
+      bits = patternQ1[step];
+      document.getElementById('statusBadge').innerText = `Step: ${step} / 8`;
+      document.getElementById('explainBox').innerHTML = `
+        <strong>กำลังทำงาน: Step ${step}</strong> ในฟังก์ชัน <code>loop()</code><br>
+        อ่านตารางแถวที่ ${step} ได้สถานะบิต: [${bits.join(', ')}]<br>
+        คำสั่ง <code>digitalWrite(ledPins[pin], pattern[step][pin])</code> ปล่อยไฟ 5V ให้หลอดที่ค่าเป็น 1 และ 0V ให้หลอดที่ค่าเป็น 0
+      `;
+    } else {
+      for (let i = 0; i < 4; i++) bits[i] = (step >> i) & 1;
+      document.getElementById('statusBadge').innerText = `ค่าตัวเลข: ${step} (ฐานสอง: ${bits.slice().reverse().join('')})`;
+      document.getElementById('explainBox').innerHTML = `
+        <strong>กำลังนับ: เลข ${step}</strong> ในฟังก์ชัน <code>setup()</code><br>
+        ถอดรหัสบิตด้วยสูตร <code>(${step} >> i) & 1</code> ได้สถานะไฟแต่ละดวง:<br>
+        • D0 (แดง/ค่า 1) = ${bits[0]} | • D1 (ส้ม/ค่า 2) = ${bits[1]} | • D2 (เหลือง/ค่า 4) = ${bits[2]} | • D3 (เขียว/ค่า 8) = ${bits[3]}
+        ${step === 15 ? '<br><strong style="color:#ef4444;">*นับครบ 15 สิ้นสุดรอบการทำงาน 1 รอบตามโจทย์กำหนด*</strong>' : ''}
+      `;
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('led' + i);
+      if (bits[i] === 1) el.classList.add('on');
+      else el.classList.remove('on');
+      document.getElementById('tag' + i).innerText = `บิต: ${bits[i]}`;
+    }
+  }
+
+  function stepNext() {
+    if (mode === 1) {
+      step = (step + 1) % 9;
+    } else {
+      if (step < 15) step++;
+      else stop();
+    }
     render();
   }
 
   function resetSim() {
-    stopAuto();
-    currentStep = 0;
+    stop();
+    step = 0;
     render();
   }
 
-  function toggleAuto() {
-    if (timer) {
-      stopAuto();
-    } else {
-      timer = setInterval(stepForward, 600);
-    }
+  function togglePlay() {
+    if (timer) stop();
+    else timer = setInterval(stepNext, mode === 1 ? 400 : 600);
   }
 
-  function stopAuto() {
+  function stop() {
     clearInterval(timer);
     timer = null;
   }
 
-  // เริ่มต้นแสดงผล Step แรก
-  render();
+  switchMode(1);
 </script>
 
 </body>
